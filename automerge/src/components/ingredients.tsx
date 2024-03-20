@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import {
-  ChangeFn,
-  ChangeOptions,
-  Doc,
-  getConflicts,
-  getObjectId,
-} from "@automerge/automerge";
+import { next as A } from "@automerge/automerge";
 import { PositionSource } from "position-strings";
 import { DEFAULT_UNIT, IngredientType, RecipeDoc } from "../schema";
 import { Ingredient } from "./ingredient";
@@ -20,10 +14,10 @@ export function Ingredients({
   doc,
   changeDoc,
 }: {
-  doc: Doc<RecipeDoc>;
+  doc: A.Doc<RecipeDoc>;
   changeDoc: (
-    changeFn: ChangeFn<RecipeDoc>,
-    options?: ChangeOptions<RecipeDoc> | undefined
+    changeFn: A.ChangeFn<RecipeDoc>,
+    options?: A.ChangeOptions<RecipeDoc> | undefined
   ) => void;
 }) {
   // When the local user adds a new ingredient, scroll to it and
@@ -40,33 +34,35 @@ export function Ingredients({
   // Attach each ingredient's current index so that we can track it through the
   // filter & sort below.
   // We need the index to make changes to the ingredient (part of its path in the doc).
-  const withIndex: (IngredientType & { pathIndex: number })[] =
-    doc.ingredients.map((ingr, i) => ({ ...ingr, pathIndex: i }));
-  const presentIngredients = withIndex.filter((ingr) => {
+  const withIndex: { ingr: IngredientType; pathIndex: number }[] =
+    doc.ingredients.map((ingr, i) => ({ ingr, pathIndex: i }));
+  const presentIngredients = withIndex.filter(({ ingr }) => {
     // True-wins semantics: If any conflict is true, the ingr is present.
     // TODO: set to true on each edit
-    const conflicts = getConflicts(ingr, "present");
+    const conflicts = A.getConflicts(ingr, "present");
+    console.log("conflicts", conflicts, ingr.present);
     if (!conflicts) return ingr.present;
     for (const conflict of Object.values(conflicts)) {
       if (conflict) return true;
     }
+    return false;
   });
   // Sort by ingredient.position.
   const sortedIngredients = presentIngredients.sort((a, b) =>
-    a.position < b.position ? -1 : 1
+    a.ingr.position < b.ingr.position ? -1 : 1
   );
 
   return (
     <>
       <div className="title">Ingredients</div>
-      {sortedIngredients.map((ingr, index) => {
+      {sortedIngredients.map(({ ingr, pathIndex }, index) => {
         // TODO: scroll-to-ingredient if the one you're editing is moved.
         // TODO: remove this if; change {return} to ()
-        if (getObjectId(ingr) === null) {
+        if (A.getObjectId(ingr) === null) {
           throw new Error("objID is null");
         }
         return (
-          <div key={getObjectId(ingr)} className="ingredientWrapper">
+          <div key={A.getObjectId(ingr)} className="ingredientWrapper">
             <div style={{ display: "flex", flexDirection: "column" }}>
               <button
                 style={{ alignSelf: "flex-start" }}
@@ -76,11 +72,11 @@ export function Ingredients({
                   const newPos = positionSource.createBetween(
                     index === 1
                       ? undefined
-                      : sortedIngredients[index - 2].position,
-                    sortedIngredients[index - 1].position
+                      : sortedIngredients[index - 2].ingr.position,
+                    sortedIngredients[index - 1].ingr.position
                   );
                   changeDoc((doc) => {
-                    doc.ingredients[ingr.pathIndex].position = newPos;
+                    doc.ingredients[pathIndex].position = newPos;
                   });
                 }}
               >
@@ -92,13 +88,13 @@ export function Ingredients({
                 onClick={() => {
                   // Create a position between index+1 and index+2.
                   const newPos = positionSource.createBetween(
-                    sortedIngredients[index + 1].position,
+                    sortedIngredients[index + 1].ingr.position,
                     index === sortedIngredients.length - 2
                       ? undefined
-                      : sortedIngredients[index + 2].position
+                      : sortedIngredients[index + 2].ingr.position
                   );
                   changeDoc((doc) => {
-                    doc.ingredients[ingr.pathIndex].position = newPos;
+                    doc.ingredients[pathIndex].position = newPos;
                   });
                 }}
               >
@@ -109,14 +105,14 @@ export function Ingredients({
               ingr={ingr}
               scale={doc.scale}
               changeDoc={changeDoc}
-              pathIndex={ingr.pathIndex}
+              pathIndex={pathIndex}
               textRef={ingr === newIngr ? newIngrTextRef : undefined}
             />
             <button
               onClick={() => {
                 changeDoc((doc) => {
                   // Logical delete. Loses to concurrent edits (see filter() above).
-                  doc.ingredients[ingr.pathIndex].present = false;
+                  doc.ingredients[pathIndex].present = false;
                 });
               }}
               className="deleteButton"
@@ -131,7 +127,7 @@ export function Ingredients({
           const ingr = {
             present: true,
             position: positionSource.createBetween(
-              sortedIngredients.at(-1)?.position
+              sortedIngredients.at(-1)?.ingr.position
             ),
             text: "",
             amountUnscaled: 0,
