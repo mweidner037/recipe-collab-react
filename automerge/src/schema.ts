@@ -1,8 +1,8 @@
 export type Unit = "kg" | "g" | "mg" | "L" | "mL" | "ct";
 export const AllUnits: Unit[] = ["kg", "g", "mg", "L", "mL", "ct"];
-export const defaultUnit: Unit = "g";
+export const DEFAULT_UNIT: Unit = "g";
 
-export interface Ingredient {
+export interface IngredientType {
   /**
    * To make edits win over concurrent deletes, we set this to true each
    * time the ingredient is edited, and treat it as true if any of
@@ -35,7 +35,7 @@ export interface RecipeDoc {
    *
    * Also, set ingr.present to false instead of deleting.
    */
-  ingredients: Ingredient[];
+  ingredients: IngredientType[];
   /**
    * Rich-text semantics.
    */

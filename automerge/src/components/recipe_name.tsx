@@ -29,7 +29,7 @@ export function RecipeName({
           if (nameEditing === null) return;
           let parsed = nameEditing.slice(0, maxNameLength).trim();
           if (parsed === "") parsed = "Untitled";
-          // Don't change the state for an aborted edit.
+          // Don't perform an op for an aborted edit.
           if (parsed !== recipeName) onSet(parsed);
           setNameEditing(null);
         }}

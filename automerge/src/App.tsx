@@ -1,6 +1,7 @@
 import { AutomergeUrl } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import "./App.css";
+import { Ingredients } from "./components/ingredients";
 import { RecipeName } from "./components/recipe_name";
 import { RecipeDoc } from "./schema";
 
@@ -21,13 +22,13 @@ function App({ docUrl }: { docUrl: AutomergeUrl }) {
           });
         }}
       />
-      {/* <div className="splitViewport">
+      <div className="splitViewport">
         <div className="split left">
           <div className="centered">
             <Ingredients doc={doc} changeDoc={changeDoc} />
           </div>
         </div>
-        <div className="split right">
+        {/* <div className="split right">
           <div className="instructions">
             <div className="title">Instructions</div>
             <AutomergeQuill
@@ -36,8 +37,8 @@ function App({ docUrl }: { docUrl: AutomergeUrl }) {
               path={["instructions"]}
             />
           </div>
-        </div>
-      </div> */}
+        </div> */}
+      </div>
     </div>
   );
 }

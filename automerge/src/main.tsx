@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
-import { RecipeDoc, defaultUnit } from "./schema.ts";
+import { DEFAULT_UNIT, RecipeDoc } from "./schema.ts";
 
 import {
   DocHandle,
@@ -40,7 +40,7 @@ if (isValidAutomergeUrl(rootDocUrl)) {
         position: new PositionSource({ ID: "INIT" }).createBetween(),
         text: "",
         amountUnscaled: 1,
-        units: defaultUnit,
+        units: DEFAULT_UNIT,
       },
     ],
     // Need a starting "\n" to match Quill's starting state.
