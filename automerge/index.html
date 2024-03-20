@@ -1,16 +1,30 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Automerge Recipe Editor</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meet Automerge</title>
-</head>
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: calc(100% - 16px);
+      }
+      #app {
+        height: calc(100% - 30px);
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <!-- TODO: use connected checkbox, or remove -->
+      <input type="checkbox" id="connected" />
+      <label for="connected">Connected</label>
+      <hr />
+    </div>
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

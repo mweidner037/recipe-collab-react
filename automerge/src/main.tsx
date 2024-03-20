@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App, { RecipeDoc, defaultUnit } from "./App.tsx";
+import App from "./App.tsx";
+import { RecipeDoc, defaultUnit } from "./schema.ts";
 
 import {
   DocHandle,
@@ -11,7 +12,6 @@ import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { PositionSource } from "position-strings";
-import "./index.css";
 
 const repo = new Repo({
   network: [new BrowserWebSocketClientAdapter("wss://sync.automerge.org")],
