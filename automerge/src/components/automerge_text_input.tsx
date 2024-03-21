@@ -2,7 +2,6 @@
 import { next as A } from "@automerge/automerge";
 import React, {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -192,16 +191,6 @@ export const AutomergeTextInput = forwardRef<
     () => new AutomergeTextInputHandle(inputRef.current!, updateCursors)
   );
 
-  /**
-   * React appears to give us an onSelect event after we mutate the text,
-   * but that confuses our cursor tracking.
-   * Use this ref to skip those events (first onSelect after each text mutation).
-   */
-  const skipNextSelect = useRef(false);
-  useEffect(() => {
-    skipNextSelect.current = true;
-  }, [textValue]);
-
   return (
     <input
       {...other}
@@ -216,11 +205,6 @@ export const AutomergeTextInput = forwardRef<
         })
       }
       onSelect={(e) => {
-        if (skipNextSelect.current) {
-          skipNextSelect.current = false;
-          return;
-        }
-
         if (props.onSelect) {
           props.onSelect(e);
           if (e.defaultPrevented) return;
@@ -241,20 +225,20 @@ export const AutomergeTextInput = forwardRef<
           if (endIndex > startIndex) {
             changeDoc((doc) => {
               A.splice(doc, path, startIndex, endIndex - startIndex);
+              setEndCursor(getCursor(startIndex, doc));
             });
-            setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex > 0) {
             changeDoc((doc) => {
               A.splice(doc, path, startIndex - 1, 1);
+              setStartCursor(getCursor(startIndex - 1, doc));
             });
-            setStartCursor(getCursor(startIndex - 1));
           }
         } else if (e.key === "Delete") {
           if (endIndex > startIndex) {
             changeDoc((doc) => {
               A.splice(doc, path, startIndex, endIndex - startIndex);
+              setEndCursor(getCursor(startIndex, doc));
             });
-            setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex < textValue.length) {
             changeDoc((doc) => {
               A.splice(doc, path, startIndex, 1);
