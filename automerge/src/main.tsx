@@ -10,13 +10,40 @@ import {
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
-import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { PositionSource } from "position-strings";
 
+const wsNetwork = new BrowserWebSocketClientAdapter("wss://sync.automerge.org");
 const repo = new Repo({
-  network: [new BrowserWebSocketClientAdapter("wss://sync.automerge.org")],
-  storage: new IndexedDBStorageAdapter(),
+  network: [],
+  // Skip storage, for easier disconnection testing.
 });
+
+// --- "Connected" checkbox for testing concurrency ---
+
+let wsAdded = false;
+const connected = document.getElementById("connected") as HTMLInputElement;
+connected.addEventListener("click", () => {
+  localStorage.setItem("connected", connected.checked + "");
+  if (connected.checked) {
+    console.log("Connecting");
+    if (!wsAdded) repo.networkSubsystem.addNetworkAdapter(wsNetwork);
+    else wsNetwork.connect(wsNetwork.peerId!);
+  } else {
+    console.log("Disconnecting");
+    // TODO: Does not fully disconnect us. For now, can test by
+    // manually turning off wifi, since the sync server is remote.
+    // See https://github.com/automerge/automerge-repo/issues/324
+    wsNetwork.disconnect();
+  }
+});
+
+connected.checked = localStorage.getItem("connected") !== "false";
+if (connected.checked) {
+  repo.networkSubsystem.addNetworkAdapter(wsNetwork);
+  wsAdded = true;
+}
+
+// --- Setup from template ---
 
 declare global {
   interface Window {
