@@ -127,20 +127,25 @@ export const AutomergeTextInput = forwardRef<
 >(function AutomergeTextInput(props, ref) {
   const { doc, changeDoc, path, ...other } = props;
 
-  const textValue: string = (function () {
-    let place: any = doc;
+  function getTextValue(theDoc = doc): string {
+    let place: any = theDoc;
     for (const pathPart of path) {
       place = place[pathPart];
     }
     return place;
-  })();
+  }
+
+  const textValue = getTextValue();
 
   /**
    * Workaround for https://github.com/automerge/automerge/issues/881 :
    * Represent a cursor at the end of the text as null.
    */
-  function getCursor(index: number): A.Cursor | null {
-    return index === textValue.length ? null : A.getCursor(doc, path, index);
+  function getCursor(index: number, theDoc = doc): A.Cursor | null {
+    const theTextValue = theDoc === doc ? textValue : getTextValue(theDoc);
+    return index === theTextValue.length
+      ? null
+      : A.getCursor(theDoc, path, index);
   }
   function getCursorPosition(cursor: A.Cursor | null): number {
     return cursor === null
@@ -180,11 +185,11 @@ export const AutomergeTextInput = forwardRef<
 
   // Types str with the given selection.
   function type(str: string, startIndex: number, endIndex: number) {
-    changeDoc((doc) =>
-      A.splice(doc, path, startIndex, endIndex - startIndex, str)
-    );
-    setStartCursor(getCursor(startIndex + str.length));
-    setEndCursor(getCursor(startIndex + str.length));
+    changeDoc((doc) => {
+      A.splice(doc, path, startIndex, endIndex - startIndex, str);
+      setStartCursor(getCursor(startIndex + str.length, doc));
+      setEndCursor(getCursor(startIndex + str.length, doc));
+    });
   }
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -240,18 +245,26 @@ export const AutomergeTextInput = forwardRef<
         const endIndex = getCursorPosition(endCursor);
         if (e.key === "Backspace") {
           if (endIndex > startIndex) {
-            A.splice(doc, path, startIndex, endIndex - startIndex);
+            changeDoc((doc) => {
+              A.splice(doc, path, startIndex, endIndex - startIndex);
+            });
             setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex > 0) {
-            A.splice(doc, path, startIndex - 1, 1);
+            changeDoc((doc) => {
+              A.splice(doc, path, startIndex - 1, 1);
+            });
             setStartCursor(getCursor(startIndex - 1));
           }
         } else if (e.key === "Delete") {
           if (endIndex > startIndex) {
-            A.splice(doc, path, startIndex, endIndex - startIndex);
+            changeDoc((doc) => {
+              A.splice(doc, path, startIndex, endIndex - startIndex);
+            });
             setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex < textValue.length) {
-            A.splice(doc, path, startIndex, 1);
+            changeDoc((doc) => {
+              A.splice(doc, path, startIndex, 1);
+            });
           }
         } else if (shouldType(e)) {
           type(e.key, startIndex, endIndex);
@@ -294,7 +307,9 @@ export const AutomergeTextInput = forwardRef<
         if (startIndex < endIndex) {
           const selected = textValue.slice(startIndex, endIndex);
           void navigator.clipboard.writeText(selected);
-          A.splice(doc, path, startIndex, endIndex - startIndex);
+          changeDoc((doc) => {
+            A.splice(doc, path, startIndex, endIndex - startIndex);
+          });
         }
         e.preventDefault();
       }}
