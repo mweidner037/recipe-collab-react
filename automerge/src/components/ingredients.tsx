@@ -38,7 +38,6 @@ export function Ingredients({
     doc.ingredients.map((ingr, i) => ({ ingr, pathIndex: i }));
   const presentIngredients = withIndex.filter(({ ingr }) => {
     // True-wins semantics: If any conflict is true, the ingr is present.
-    console.log("filter", ingr);
     const conflicts = A.getConflicts(ingr, "present");
     if (!conflicts) return ingr.present;
     for (const conflict of Object.values(conflicts)) {
@@ -132,7 +131,13 @@ export function Ingredients({
             amountUnscaled: 0,
             units: DEFAULT_UNIT,
           };
-          doc.ingredients.push(ingr);
+          changeDoc((doc) => {
+            doc.ingredients.push(ingr);
+          });
+          // For setNewIngr, ingr just needs to be a unique new object -
+          // doesn't matter whether it is the reference that Automerge actually stores.
+          // I'm calling this outside changeDoc in case a sync render inside changeDoc
+          // is a bad idea.
           setNewIngr(ingr);
         }}
         className="addButton"
