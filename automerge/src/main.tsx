@@ -31,7 +31,7 @@ if (isValidAutomergeUrl(rootDocUrl)) {
 } else {
   handle = repo.create<RecipeDoc>({
     recipeName: "Untitled",
-    scale: 0,
+    scale: 1,
     ingredients: [
       // Start with an empty ingredient, for convenience.
       {
@@ -39,7 +39,7 @@ if (isValidAutomergeUrl(rootDocUrl)) {
         // Arbitrary valid starting position.
         position: new PositionSource({ ID: "INIT" }).createBetween(),
         text: "",
-        amountUnscaled: 1,
+        amountUnscaled: 0,
         units: DEFAULT_UNIT,
       },
     ],

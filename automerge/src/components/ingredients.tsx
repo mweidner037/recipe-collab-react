@@ -38,9 +38,8 @@ export function Ingredients({
     doc.ingredients.map((ingr, i) => ({ ingr, pathIndex: i }));
   const presentIngredients = withIndex.filter(({ ingr }) => {
     // True-wins semantics: If any conflict is true, the ingr is present.
-    // TODO: set to true on each edit
+    console.log("filter", ingr);
     const conflicts = A.getConflicts(ingr, "present");
-    console.log("conflicts", conflicts, ingr.present);
     if (!conflicts) return ingr.present;
     for (const conflict of Object.values(conflicts)) {
       if (conflict) return true;
