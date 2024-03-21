@@ -38,7 +38,6 @@
 .left {
   left: 0;
   background-color: rgb(225, 238, 233);
-  min-height: 300px;
 }
 
 .left * {

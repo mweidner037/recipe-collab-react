@@ -5,6 +5,9 @@ import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 import { useEffect, useRef } from "react";
 import { getAtPath } from "../util";
 
+// Include CSS
+import "quill/dist/quill.snow.css";
+
 const Delta: typeof DeltaType = Quill.import("delta");
 
 /**

@@ -1,11 +1,11 @@
 import { CRichText } from "@collabs/collabs";
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
+import React, { useEffect, useRef } from "react";
 
 // TODO: add shared cursors (from Collabs main)
 
 // Include CSS
 import "quill/dist/quill.snow.css";
-import React, { useEffect, useRef } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const Delta: typeof DeltaType = Quill.import("delta");

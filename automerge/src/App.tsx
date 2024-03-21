@@ -1,10 +1,11 @@
 import { AutomergeUrl, DocHandle } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import "./App.css";
 import { AutomergeQuill } from "./components/automerge_quill";
 import { Ingredients } from "./components/ingredients";
 import { RecipeName } from "./components/recipe_name";
 import { RecipeDoc } from "./schema";
+
+import "./App.css";
 
 function App({
   docUrl,
