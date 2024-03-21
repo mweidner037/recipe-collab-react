@@ -1,5 +1,5 @@
-import { CText, Cursor, Cursors } from "@collabs/collabs";
-import { nonNull } from "@collabs/core";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { next as A } from "@automerge/automerge";
 import React, {
   forwardRef,
   useEffect,
@@ -8,17 +8,20 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useCollab } from "../hooks/use_collab";
 
 // Copy-modified from @collabs/react's CollabsTextInput.
 // Most of the effort is in re-constructing all of the browser's usual input handling
 // so that we can capture it and reflect it to the CRDT.
 
-/**
- * Props for [[CollabsTextInput]].
- */
-export type CollabsTextInputProps = {
-  text: CText;
+export type AutomergeTextInputProps = {
+  doc: A.Doc<any>;
+  changeDoc: (
+    // Using any instead of unknown/T here to work around
+    // https://github.com/automerge/automerge/issues/636#issuecomment-2011039693
+    changeFn: A.ChangeFn<any>,
+    options?: A.ChangeOptions<any> | undefined
+  ) => void;
+  path: A.Prop[];
 } & Omit<
   React.DetailedHTMLProps<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -28,9 +31,9 @@ export type CollabsTextInputProps = {
 >;
 
 /**
- * Type for [[CollabTextInput]]'s ref.
+ * Type for AutomergeTextInput's ref.
  */
-export class CollabsTextInputHandle {
+export class AutomergeTextInputHandle {
   constructor(
     private readonly input: HTMLInputElement,
     private readonly updateCursors: () => void
@@ -95,40 +98,50 @@ export class CollabsTextInputHandle {
 }
 
 /**
- * An `<input type="text" />` component that syncs its state to a Collabs CText,
- * provided in the `text` prop.
+ * An `<input type="text" />` component that syncs its state to an Automerge string,
+ * provided by the `doc` and `path` props.
  *
- * Local changes update `text` collaboratively, and remote updates to `text`
+ * Local changes update the doc collaboratively, and remote updates to the doc
  * show up in the input field. We also manage the local selection in the
  * usual way for collaborative text editing.
  *
  * ## Props
  *
- * - `text: CText`: The Collabs CText to sync to.
+ * - doc, changeDoc: From useDocument hook.
+ * - path: Path to the text string within doc.
  * - Otherwise the same as HTMLInputElement, except we omit a few
  * that don't make sense (`value`, `defaultValue`, `type`).
  *
  * ## Advanced usage
  *
- * - To change the text programmatically, mutate `text`.
+ * - To change the text programmatically, mutate the doc's text and trigger a re-render.
  * - You may intercept and prevent events like `onKeyDown`.
  * - We expose a number of `<input>` methods through our ref
- * ([[CollabsTextInputHandle]]), including
+ * (AutomergeTextInputHandle), including
  * the ability to set `selectionStart` / `selectionEnd`. Once set,
  * the selection will move around as usual.
  */
-export const CollabsTextInput = forwardRef<
-  CollabsTextInputHandle,
-  CollabsTextInputProps
->(function CollabsTextInput(props, ref) {
-  const { text, ...other } = props;
-  useCollab(text);
+export const AutomergeTextInput = forwardRef<
+  AutomergeTextInputHandle,
+  AutomergeTextInputProps
+>(function AutomergeTextInput(props, ref) {
+  const { doc, changeDoc, path, ...other } = props;
 
-  const [startCursor, setStartCursor] = useState<Cursor>(
-    Cursors.fromIndex(0, text)
+  const textValue: string = (function () {
+    let place: any = doc;
+    for (const pathPart of path) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      place = doc[pathPart];
+    }
+    return place;
+  })();
+
+  const [startCursor, setStartCursor] = useState<A.Cursor>(
+    A.getCursor(doc, path, 0)
   );
-  const [endCursor, setEndCursor] = useState<Cursor>(
-    Cursors.fromIndex(0, text)
+  const [endCursor, setEndCursor] = useState<A.Cursor>(
+    A.getCursor(doc, path, 0)
   );
   const [direction, setDirection] = useState<
     "none" | "forward" | "backward" | null
@@ -139,8 +152,12 @@ export const CollabsTextInput = forwardRef<
     // value causes the cursor to jump to the end, which is briefly visible
     // if you useEffect.
     if (inputRef.current === null) return;
-    inputRef.current.selectionStart = Cursors.toIndex(startCursor, text);
-    inputRef.current.selectionEnd = Cursors.toIndex(endCursor, text);
+    inputRef.current.selectionStart = A.getCursorPosition(
+      doc,
+      path,
+      startCursor
+    );
+    inputRef.current.selectionEnd = A.getCursorPosition(doc, path, endCursor);
     inputRef.current.selectionDirection = direction;
   });
 
@@ -149,9 +166,9 @@ export const CollabsTextInput = forwardRef<
     if (inputRef.current === null) return;
 
     setStartCursor(
-      Cursors.fromIndex(inputRef.current.selectionStart ?? 0, text)
+      A.getCursor(doc, path, inputRef.current.selectionStart ?? 0)
     );
-    setEndCursor(Cursors.fromIndex(inputRef.current.selectionEnd ?? 0, text));
+    setEndCursor(A.getCursor(doc, path, inputRef.current.selectionEnd ?? 0));
     setDirection(inputRef.current.selectionDirection);
   }
 
@@ -162,19 +179,17 @@ export const CollabsTextInput = forwardRef<
 
   // Types str with the given selection.
   function type(str: string, startIndex: number, endIndex: number) {
-    if (startIndex < endIndex) {
-      // Delete current selection
-      text.delete(startIndex, endIndex - startIndex);
-    }
-    text.insert(startIndex, str);
-    setStartCursor(Cursors.fromIndex(startIndex + str.length, text));
-    setEndCursor(Cursors.fromIndex(startIndex + str.length, text));
+    changeDoc((doc) =>
+      A.splice(doc, path, startIndex, endIndex - startIndex, str)
+    );
+    setStartCursor(A.getCursor(doc, path, startIndex + str.length));
+    setEndCursor(A.getCursor(doc, path, startIndex + str.length));
   }
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   useImperativeHandle(
     ref,
-    () => new CollabsTextInputHandle(nonNull(inputRef.current), updateCursors)
+    () => new AutomergeTextInputHandle(inputRef.current!, updateCursors)
   );
 
   /**
@@ -184,15 +199,15 @@ export const CollabsTextInput = forwardRef<
    */
   const skipNextSelect = useRef(false);
   useEffect(() => {
-    return text.on("Any", () => (skipNextSelect.current = true));
-  }, [text]);
+    skipNextSelect.current = true;
+  }, [textValue]);
 
   return (
     <input
       {...other}
       type="text"
       ref={inputRef}
-      value={text.toString()}
+      value={textValue}
       onChange={
         props.onChange ??
         (() => {
@@ -220,22 +235,22 @@ export const CollabsTextInput = forwardRef<
         }
         if (props.readOnly || props.disabled) return;
 
-        const startIndex = Cursors.toIndex(startCursor, text);
-        const endIndex = Cursors.toIndex(endCursor, text);
+        const startIndex = A.getCursorPosition(doc, path, startCursor);
+        const endIndex = A.getCursorPosition(doc, path, endCursor);
         if (e.key === "Backspace") {
           if (endIndex > startIndex) {
-            text.delete(startIndex, endIndex - startIndex);
-            setEndCursor(Cursors.fromIndex(startIndex, text));
+            A.splice(doc, path, startIndex, endIndex - startIndex);
+            setEndCursor(A.getCursor(doc, path, startIndex));
           } else if (endIndex === startIndex && startIndex > 0) {
-            text.delete(startIndex - 1);
-            setStartCursor(Cursors.fromIndex(startIndex - 1, text));
+            A.splice(doc, path, startIndex - 1, 1);
+            setStartCursor(A.getCursor(doc, path, startIndex - 1));
           }
         } else if (e.key === "Delete") {
           if (endIndex > startIndex) {
-            text.delete(startIndex, endIndex - startIndex);
-            setEndCursor(Cursors.fromIndex(startIndex, text));
-          } else if (endIndex === startIndex && startIndex < text.length) {
-            text.delete(startIndex);
+            A.splice(doc, path, startIndex, endIndex - startIndex);
+            setEndCursor(A.getCursor(doc, path, startIndex));
+          } else if (endIndex === startIndex && startIndex < textValue.length) {
+            A.splice(doc, path, startIndex, 1);
           }
         } else if (shouldType(e)) {
           type(e.key, startIndex, endIndex);
@@ -259,8 +274,8 @@ export const CollabsTextInput = forwardRef<
         if (props.readOnly || props.disabled) return;
 
         if (e.clipboardData) {
-          const startIndex = Cursors.toIndex(startCursor, text);
-          const endIndex = Cursors.toIndex(endCursor, text);
+          const startIndex = A.getCursorPosition(doc, path, startCursor);
+          const endIndex = A.getCursorPosition(doc, path, endCursor);
           const pasted = e.clipboardData.getData("text");
           type(pasted, startIndex, endIndex);
         }
@@ -273,12 +288,12 @@ export const CollabsTextInput = forwardRef<
         }
         if (props.readOnly || props.disabled) return;
 
-        const startIndex = Cursors.toIndex(startCursor, text);
-        const endIndex = Cursors.toIndex(endCursor, text);
+        const startIndex = A.getCursorPosition(doc, path, startCursor);
+        const endIndex = A.getCursorPosition(doc, path, endCursor);
         if (startIndex < endIndex) {
-          const selected = text.toString().slice(startIndex, endIndex);
+          const selected = textValue.slice(startIndex, endIndex);
           void navigator.clipboard.writeText(selected);
-          text.delete(startIndex, endIndex - startIndex);
+          A.splice(doc, path, startIndex, endIndex - startIndex);
         }
         e.preventDefault();
       }}
