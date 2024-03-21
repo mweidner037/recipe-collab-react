@@ -13,5 +13,5 @@ Context:
    - I tricked myself here by replacing each `ingr` with `{ ...ingr, pathIndex }`, then trying to call `getConflicts` - which rightly complained that the new object was not an Automerge object. Fixed by using a wrapper `{ ingr, pathIndex }` instead of trying to add the `pathIndex` property.
 4. Subtle bug (my fault): Forget to wrap one call in `changeDoc` (`doc.ingredients.push(ingr);`). No type errors or call-site runtime errors, but on the next render, `getConflicts` failed when it got to that ingredient (`"must be the document root"`).
    - Seems like some ops (e.g. `splice`) have built-in protection here (runtime errors), but apparently not push? Or did React hijack the control flow s.t. the render error happened before an error at the push call site?
-5. How can I convert a doc + path (like the built-in methods input) into its value? Can this be done in a type-safe way? (Current attempt: see `textValue` definition in `automerge_text_input.tsx`.)
+5. How can I convert a doc + path (like the built-in methods input) into its value? Can this be done in a type-safe way? (Current attempt: see `getAtPath` in `util.ts`.)
 6. Calling `setState` hook inside a changeFn seems to work (e.g. setCursor calls in `automerge_text_input.tsx`) - nice.

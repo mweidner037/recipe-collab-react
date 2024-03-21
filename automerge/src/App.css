@@ -38,7 +38,6 @@
 .left {
   left: 0;
   background-color: rgb(225, 238, 233);
-  /* TODO: remove once we add Quill (sets height for us). */
   min-height: 300px;
 }
 

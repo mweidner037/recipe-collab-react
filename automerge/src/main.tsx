@@ -52,7 +52,7 @@ declare global {
 }
 
 const rootDocUrl = `${document.location.hash.substring(1)}`;
-let handle;
+let handle: DocHandle<RecipeDoc>;
 if (isValidAutomergeUrl(rootDocUrl)) {
   handle = repo.find(rootDocUrl);
 } else {
@@ -80,7 +80,7 @@ window.handle = handle; // we'll use this later for experimentation
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RepoContext.Provider value={repo}>
-      <App docUrl={docUrl} />
+      <App docUrl={docUrl} docHandle={handle} />
     </RepoContext.Provider>
   </React.StrictMode>
 );

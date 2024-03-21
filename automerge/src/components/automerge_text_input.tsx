@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { getAtPath } from "../util";
 
 // Copy-modified from @collabs/react's CollabsTextInput.
 // Most of the effort is in re-constructing all of the browser's usual input handling
@@ -127,22 +128,15 @@ export const AutomergeTextInput = forwardRef<
 >(function AutomergeTextInput(props, ref) {
   const { doc, changeDoc, path, ...other } = props;
 
-  function getTextValue(theDoc = doc): string {
-    let place: any = theDoc;
-    for (const pathPart of path) {
-      place = place[pathPart];
-    }
-    return place;
-  }
-
-  const textValue = getTextValue();
+  const textValue = getAtPath(doc, path) as string;
 
   /**
    * Workaround for https://github.com/automerge/automerge/issues/881 :
    * Represent a cursor at the end of the text as null.
    */
   function getCursor(index: number, theDoc = doc): A.Cursor | null {
-    const theTextValue = theDoc === doc ? textValue : getTextValue(theDoc);
+    const theTextValue =
+      theDoc === doc ? textValue : (getAtPath(theDoc, path) as string);
     return index === theTextValue.length
       ? null
       : A.getCursor(theDoc, path, index);
