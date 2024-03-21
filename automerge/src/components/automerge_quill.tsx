@@ -10,6 +10,10 @@ import "quill/dist/quill.snow.css";
 
 const Delta: typeof DeltaType = Quill.import("delta");
 
+// TODO: Fix Quill double-toolbar in React strict mode.
+// For now we just disable strict mode.
+// See https://github.com/zenoamaro/react-quill/issues/784
+
 /**
  * Assumes:
  * - docHandle.isReady().
@@ -82,8 +86,6 @@ export function AutomergeQuill({
       for (const patch of patches) {
         if (!startsWith(patch.path, path)) continue;
 
-        console.log(JSON.stringify(patch, undefined, 2));
-
         switch (patch.action) {
           case "splice": {
             const index = patch.path[path.length] as number;
@@ -142,7 +144,6 @@ export function AutomergeQuill({
             // Insertion
             if (op.insert) {
               if (typeof op.insert === "string") {
-                console.log("splice", op.index, 0, op.insert);
                 A.splice(doc, path, op.index, 0, op.insert);
 
                 const quillAttrs = op.attributes ?? {};
@@ -151,10 +152,6 @@ export function AutomergeQuill({
                 // Here I assume that all new chars have the same inherited marks.
                 const needsFormat = new Map(
                   [...Object.entries(quillAttrs)].map(quillAttrToAutomerge)
-                );
-                console.log(
-                  "marksAt",
-                  JSON.stringify(A.marksAt(doc, path, op.index), undefined, 2)
                 );
                 for (const [key, value] of Object.entries(
                   A.marksAt(doc, path, op.index)
@@ -284,16 +281,8 @@ function setFormat(
   value: any
 ) {
   if (value === null) {
-    console.log("unmark", { start, end, expand: getExpand(key, false), key });
     A.unmark(doc, path, { start, end, expand: getExpand(key, false) }, key);
   } else {
-    console.log("mark", {
-      start,
-      end,
-      expand: getExpand(key, false),
-      key,
-      value,
-    });
     A.mark(doc, path, { start, end, expand: getExpand(key, true) }, key, value);
   }
 }

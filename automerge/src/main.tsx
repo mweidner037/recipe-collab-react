@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import { DEFAULT_UNIT, RecipeDoc } from "./schema.ts";
@@ -78,9 +77,7 @@ const docUrl = (document.location.hash = handle.url);
 window.handle = handle; // we'll use this later for experimentation
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <RepoContext.Provider value={repo}>
-      <App docUrl={docUrl} docHandle={handle} />
-    </RepoContext.Provider>
-  </React.StrictMode>
+  <RepoContext.Provider value={repo}>
+    <App docUrl={docUrl} docHandle={handle} />
+  </RepoContext.Provider>
 );
