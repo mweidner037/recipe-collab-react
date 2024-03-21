@@ -130,19 +130,26 @@ export const AutomergeTextInput = forwardRef<
   const textValue: string = (function () {
     let place: any = doc;
     for (const pathPart of path) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      place = doc[pathPart];
+      place = place[pathPart];
     }
     return place;
   })();
 
-  const [startCursor, setStartCursor] = useState<A.Cursor>(
-    A.getCursor(doc, path, 0)
-  );
-  const [endCursor, setEndCursor] = useState<A.Cursor>(
-    A.getCursor(doc, path, 0)
-  );
+  /**
+   * Workaround for https://github.com/automerge/automerge/issues/881 :
+   * Represent a cursor at the end of the text as null.
+   */
+  function getCursor(index: number): A.Cursor | null {
+    return index === textValue.length ? null : A.getCursor(doc, path, index);
+  }
+  function getCursorPosition(cursor: A.Cursor | null): number {
+    return cursor === null
+      ? textValue.length
+      : A.getCursorPosition(doc, path, cursor);
+  }
+
+  const [startCursor, setStartCursor] = useState<A.Cursor | null>(getCursor(0));
+  const [endCursor, setEndCursor] = useState<A.Cursor | null>(getCursor(0));
   const [direction, setDirection] = useState<
     "none" | "forward" | "backward" | null
   >(null);
@@ -152,12 +159,8 @@ export const AutomergeTextInput = forwardRef<
     // value causes the cursor to jump to the end, which is briefly visible
     // if you useEffect.
     if (inputRef.current === null) return;
-    inputRef.current.selectionStart = A.getCursorPosition(
-      doc,
-      path,
-      startCursor
-    );
-    inputRef.current.selectionEnd = A.getCursorPosition(doc, path, endCursor);
+    inputRef.current.selectionStart = getCursorPosition(startCursor);
+    inputRef.current.selectionEnd = getCursorPosition(endCursor);
     inputRef.current.selectionDirection = direction;
   });
 
@@ -165,10 +168,8 @@ export const AutomergeTextInput = forwardRef<
   function updateCursors() {
     if (inputRef.current === null) return;
 
-    setStartCursor(
-      A.getCursor(doc, path, inputRef.current.selectionStart ?? 0)
-    );
-    setEndCursor(A.getCursor(doc, path, inputRef.current.selectionEnd ?? 0));
+    setStartCursor(getCursor(inputRef.current.selectionStart ?? 0));
+    setEndCursor(getCursor(inputRef.current.selectionEnd ?? 0));
     setDirection(inputRef.current.selectionDirection);
   }
 
@@ -182,8 +183,8 @@ export const AutomergeTextInput = forwardRef<
     changeDoc((doc) =>
       A.splice(doc, path, startIndex, endIndex - startIndex, str)
     );
-    setStartCursor(A.getCursor(doc, path, startIndex + str.length));
-    setEndCursor(A.getCursor(doc, path, startIndex + str.length));
+    setStartCursor(getCursor(startIndex + str.length));
+    setEndCursor(getCursor(startIndex + str.length));
   }
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -235,20 +236,20 @@ export const AutomergeTextInput = forwardRef<
         }
         if (props.readOnly || props.disabled) return;
 
-        const startIndex = A.getCursorPosition(doc, path, startCursor);
-        const endIndex = A.getCursorPosition(doc, path, endCursor);
+        const startIndex = getCursorPosition(startCursor);
+        const endIndex = getCursorPosition(endCursor);
         if (e.key === "Backspace") {
           if (endIndex > startIndex) {
             A.splice(doc, path, startIndex, endIndex - startIndex);
-            setEndCursor(A.getCursor(doc, path, startIndex));
+            setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex > 0) {
             A.splice(doc, path, startIndex - 1, 1);
-            setStartCursor(A.getCursor(doc, path, startIndex - 1));
+            setStartCursor(getCursor(startIndex - 1));
           }
         } else if (e.key === "Delete") {
           if (endIndex > startIndex) {
             A.splice(doc, path, startIndex, endIndex - startIndex);
-            setEndCursor(A.getCursor(doc, path, startIndex));
+            setEndCursor(getCursor(startIndex));
           } else if (endIndex === startIndex && startIndex < textValue.length) {
             A.splice(doc, path, startIndex, 1);
           }
@@ -274,8 +275,8 @@ export const AutomergeTextInput = forwardRef<
         if (props.readOnly || props.disabled) return;
 
         if (e.clipboardData) {
-          const startIndex = A.getCursorPosition(doc, path, startCursor);
-          const endIndex = A.getCursorPosition(doc, path, endCursor);
+          const startIndex = getCursorPosition(startCursor);
+          const endIndex = getCursorPosition(endCursor);
           const pasted = e.clipboardData.getData("text");
           type(pasted, startIndex, endIndex);
         }
@@ -288,8 +289,8 @@ export const AutomergeTextInput = forwardRef<
         }
         if (props.readOnly || props.disabled) return;
 
-        const startIndex = A.getCursorPosition(doc, path, startCursor);
-        const endIndex = A.getCursorPosition(doc, path, endCursor);
+        const startIndex = getCursorPosition(startCursor);
+        const endIndex = getCursorPosition(endCursor);
         if (startIndex < endIndex) {
           const selected = textValue.slice(startIndex, endIndex);
           void navigator.clipboard.writeText(selected);

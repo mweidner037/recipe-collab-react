@@ -2,23 +2,29 @@ import { Ref, useRef, useState } from "react";
 
 import { ChangeFn, ChangeOptions } from "@automerge/automerge";
 import { AllUnits, IngredientType, RecipeDoc, Unit } from "../schema";
+import {
+  AutomergeTextInput,
+  AutomergeTextInputHandle,
+} from "./automerge_text_input";
 import "./ingredient.css";
 
 export function Ingredient({
   ingr,
   scale,
+  doc,
   changeDoc,
   pathIndex,
   textRef,
 }: {
   ingr: IngredientType;
   scale: number;
+  doc: RecipeDoc;
   changeDoc: (
     changeFn: ChangeFn<RecipeDoc>,
     options?: ChangeOptions<RecipeDoc> | undefined
   ) => void;
   pathIndex: number;
-  textRef?: Ref<HTMLInputElement>;
+  textRef?: Ref<AutomergeTextInputHandle>;
 }) {
   const [amountEditing, setAmountEditing] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
@@ -39,8 +45,13 @@ export function Ingredient({
 
   return (
     <div className="ingredient">
-      {/* TODO: handle text input */}
-      <input type="text" value={ingr.text} ref={textRef} size={12} />
+      <AutomergeTextInput
+        doc={doc}
+        changeDoc={changeDoc}
+        path={["ingredients", pathIndex, "text"]}
+        ref={textRef}
+        size={12}
+      />
       <input
         type="number"
         min={0}

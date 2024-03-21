@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { next as A } from "@automerge/automerge";
 import { PositionSource } from "position-strings";
 import { DEFAULT_UNIT, IngredientType, RecipeDoc } from "../schema";
+import { AutomergeTextInputHandle } from "./automerge_text_input";
 import { Ingredient } from "./ingredient";
 import "./ingredients.css";
 
@@ -23,7 +24,7 @@ export function Ingredients({
   // When the local user adds a new ingredient, scroll to it and
   // select its text.
   const [newIngr, setNewIngr] = useState<IngredientType | null>(null);
-  const newIngrTextRef = useRef<HTMLInputElement>(null);
+  const newIngrTextRef = useRef<AutomergeTextInputHandle>(null);
   useEffect(() => {
     if (newIngrTextRef.current === null) return;
     newIngrTextRef.current.select();
@@ -102,6 +103,7 @@ export function Ingredients({
             <Ingredient
               ingr={ingr}
               scale={doc.scale}
+              doc={doc}
               changeDoc={changeDoc}
               pathIndex={pathIndex}
               textRef={ingr === newIngr ? newIngrTextRef : undefined}
