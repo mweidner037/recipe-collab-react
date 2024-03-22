@@ -38,6 +38,8 @@ export function Ingredient({
         // Set the value s.t. (amountUnscaled) * (global scale) = parsed.
         doc.ingredients[pathIndex].amountUnscaled = parsed / doc.scale;
         // Keep alive in the face of concurrent deletions.
+        // Toggle back and forth to workaround https://github.com/automerge/automerge/issues/889
+        doc.ingredients[pathIndex].present = false;
         doc.ingredients[pathIndex].present = true;
       });
     }
@@ -47,7 +49,15 @@ export function Ingredient({
     <div className="ingredient">
       <AutomergeTextInput
         doc={doc}
-        changeDoc={changeDoc}
+        changeDoc={(changeFn: ChangeFn<RecipeDoc>, options) => {
+          function wrappedChangeFn(doc: RecipeDoc) {
+            changeFn(doc);
+            // Keep alive in the face of concurrent deletions.
+            doc.ingredients[pathIndex].present = false;
+            doc.ingredients[pathIndex].present = true;
+          }
+          changeDoc(wrappedChangeFn, options);
+        }}
         path={["ingredients", pathIndex, "text"]}
         ref={textRef}
         size={12}
@@ -84,6 +94,7 @@ export function Ingredient({
           changeDoc((doc) => {
             doc.ingredients[pathIndex].units = e.target.value as Unit;
             // Keep alive in the face of concurrent deletions.
+            doc.ingredients[pathIndex].present = false;
             doc.ingredients[pathIndex].present = true;
           });
         }}

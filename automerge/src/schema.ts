@@ -16,8 +16,7 @@ export interface IngredientType {
    */
   position: string;
   /**
-   * LWW semantics.
-   * TODO: change to text CRDT semantics?
+   * Text CRDT semantics?
    */
   text: string;
   amountUnscaled: number;

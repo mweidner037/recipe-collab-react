@@ -11,7 +11,12 @@ import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { PositionSource } from "position-strings";
 
-const wsNetwork = new BrowserWebSocketClientAdapter("wss://sync.automerge.org");
+// TODOs: concurrent edits undo deletes (incl text); test all interesting scenarios
+
+const wsNetwork = new BrowserWebSocketClientAdapter(
+  "wss://sync.automerge.org",
+  1000
+);
 const repo = new Repo({
   network: [],
   // Skip storage, for easier disconnection testing.
@@ -30,7 +35,7 @@ connected.addEventListener("click", () => {
   } else {
     console.log("Disconnecting");
     // TODO: Does not fully disconnect us. For now, can test by
-    // manually turning off wifi, since the sync server is remote.
+    // manually turning off network (Chrome only).
     // See https://github.com/automerge/automerge-repo/issues/324
     wsNetwork.disconnect();
   }

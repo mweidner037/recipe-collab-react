@@ -51,77 +51,71 @@ export function Ingredients({
     a.ingr.position < b.ingr.position ? -1 : 1
   );
 
+  // TODO: scroll-to-ingredient if the one you're editing is moved.
   return (
     <>
       <div className="title">Ingredients</div>
-      {sortedIngredients.map(({ ingr, pathIndex }, index) => {
-        // TODO: scroll-to-ingredient if the one you're editing is moved.
-        // TODO: remove this if; change {return} to ()
-        if (A.getObjectId(ingr) === null) {
-          throw new Error("objID is null");
-        }
-        return (
-          <div key={A.getObjectId(ingr)} className="ingredientWrapper">
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <button
-                style={{ alignSelf: "flex-start" }}
-                disabled={index === 0}
-                onClick={() => {
-                  // Create a position between index-2 and index-1.
-                  const newPos = positionSource.createBetween(
-                    index === 1
-                      ? undefined
-                      : sortedIngredients[index - 2].ingr.position,
-                    sortedIngredients[index - 1].ingr.position
-                  );
-                  changeDoc((doc) => {
-                    doc.ingredients[pathIndex].position = newPos;
-                  });
-                }}
-              >
-                ↑
-              </button>
-              <button
-                style={{ alignSelf: "flex-start" }}
-                disabled={index === sortedIngredients.length - 1}
-                onClick={() => {
-                  // Create a position between index+1 and index+2.
-                  const newPos = positionSource.createBetween(
-                    sortedIngredients[index + 1].ingr.position,
-                    index === sortedIngredients.length - 2
-                      ? undefined
-                      : sortedIngredients[index + 2].ingr.position
-                  );
-                  changeDoc((doc) => {
-                    doc.ingredients[pathIndex].position = newPos;
-                  });
-                }}
-              >
-                ↓
-              </button>
-            </div>
-            <Ingredient
-              ingr={ingr}
-              scale={doc.scale}
-              doc={doc}
-              changeDoc={changeDoc}
-              pathIndex={pathIndex}
-              textRef={ingr === newIngr ? newIngrTextRef : undefined}
-            />
+      {sortedIngredients.map(({ ingr, pathIndex }, index) => (
+        <div key={A.getObjectId(ingr)} className="ingredientWrapper">
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <button
+              style={{ alignSelf: "flex-start" }}
+              disabled={index === 0}
               onClick={() => {
+                // Create a position between index-2 and index-1.
+                const newPos = positionSource.createBetween(
+                  index === 1
+                    ? undefined
+                    : sortedIngredients[index - 2].ingr.position,
+                  sortedIngredients[index - 1].ingr.position
+                );
                 changeDoc((doc) => {
-                  // Logical delete. Loses to concurrent edits (see filter() above).
-                  doc.ingredients[pathIndex].present = false;
+                  doc.ingredients[pathIndex].position = newPos;
                 });
               }}
-              className="deleteButton"
             >
-              X
+              ↑
+            </button>
+            <button
+              style={{ alignSelf: "flex-start" }}
+              disabled={index === sortedIngredients.length - 1}
+              onClick={() => {
+                // Create a position between index+1 and index+2.
+                const newPos = positionSource.createBetween(
+                  sortedIngredients[index + 1].ingr.position,
+                  index === sortedIngredients.length - 2
+                    ? undefined
+                    : sortedIngredients[index + 2].ingr.position
+                );
+                changeDoc((doc) => {
+                  doc.ingredients[pathIndex].position = newPos;
+                });
+              }}
+            >
+              ↓
             </button>
           </div>
-        );
-      })}
+          <Ingredient
+            ingr={ingr}
+            scale={doc.scale}
+            doc={doc}
+            changeDoc={changeDoc}
+            pathIndex={pathIndex}
+            textRef={ingr === newIngr ? newIngrTextRef : undefined}
+          />
+          <button
+            onClick={() => {
+              changeDoc((doc) => {
+                // Logical delete. Loses to concurrent edits (see filter() above).
+                doc.ingredients[pathIndex].present = false;
+              });
+            }}
+            className="deleteButton"
+          >
+            X
+          </button>
+        </div>
+      ))}
       <button
         onClick={() => {
           const ingr = {
