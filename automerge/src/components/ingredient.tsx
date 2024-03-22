@@ -74,6 +74,7 @@ export function Ingredient({
           // If the element is in focus (being typed in), wait until we lose
           // focus to change the value (onBlur).
           // Otherwise (changed using up/down arrows), change the value immediately.
+          // TODO: up/down arrows immediately: only works in Firefox, not Chrome.
           if (document.activeElement === amountRef.current) {
             setAmountEditing(e.target.value);
           } else setAmount(e.target.value);
