@@ -17,3 +17,5 @@ Context:
 6. Calling `setState` hook inside a changeFn seems to work (e.g. setCursor calls in `automerge_text_input.tsx`) - nice.
    - I originally tried doing the setCursor calls outside the changeFn, but the issue is that those see the old doc state. I think changeFn's behavior is expected for React code that takes an immutable doc as a prop; I just got tricked because I was migrating from Collabs code, where the "doc" is mutable.
    - The Automerge style appeared to solve a weird edge case with onSelect in the Collabs code (`skipNextSelect` in [CollabsTextInput](https://github.com/composablesys/collabs/blob/master/react/src/components/collabs_text_input.tsx)). So I got to remove that workaround.
+7. getConflicts behavior: https://github.com/automerge/automerge/issues/889 surprised me, but I can see how it makes sense as-is.
+8. Moving ingredients: Instead of trying to figure out a list-with-move using Automerge's lists/cursors, I cheated by using a different library, to create the ingredient `position` values (which are then synced through Automerge as opaque strings): [position-strings](https://github.com/mweidner037/position-strings#readme).
