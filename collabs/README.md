@@ -1,4 +1,4 @@
-# Recipe Editor Demo
+# Collabs - Recipe Editor Demo
 
 A collaborative recipe editor, using [@collabs/ws-client](https://www.npmjs.com/package/@collabs/ws-client) and [@collabs/ws-server](https://www.npmjs.com/package/@collabs/ws-server) to connect users via a WebSocket server.
 
