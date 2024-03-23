@@ -16,9 +16,15 @@ export interface IngredientType {
    */
   position: string;
   /**
-   * Text CRDT semantics?
+   * Text CRDT semantics.
    */
   text: string;
+  /**
+   * The amount divided by the current global scale.
+   *
+   * You can think of this as the "amount per serving" and the scale as
+   * "# servings to display".
+   */
   amountUnscaled: number;
   units: Unit;
 }
@@ -28,11 +34,15 @@ export interface RecipeDoc {
    * LWW semantics.
    */
   recipeName: string;
+  /**
+   * The global scale. The scale-recipe buttons set this to 2x or 0.5x
+   * its previous value.
+   */
   scale: number;
   /**
-   * Array order is ignored - use ingr.position instead.
-   *
-   * Also, set ingr.present to false instead of deleting.
+   * The set of ingredients, including deleted ingredients.
+   * - Array order is ignored - use ingr.position instead.
+   * - Set ingr.present to false instead of deleting.
    */
   ingredients: IngredientType[];
   /**
