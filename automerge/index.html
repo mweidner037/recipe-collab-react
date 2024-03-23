@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Automerge Recipe Editor</title>
+
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: calc(100% - 16px);
+      }
+      #root {
+        height: calc(100% - 30px);
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <input type="checkbox" id="connected" />
+      <label for="connected">Connected</label>
+      <hr />
+    </div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
