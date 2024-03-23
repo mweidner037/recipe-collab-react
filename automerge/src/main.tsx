@@ -1,17 +1,17 @@
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import { DEFAULT_UNIT, RecipeDoc } from "./schema.ts";
+import { TestBrowserWebSocketClientAdapter } from "./util.ts";
 
 import {
   DocHandle,
   Repo,
   isValidAutomergeUrl,
 } from "@automerge/automerge-repo";
-import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { PositionSource } from "position-strings";
 
-const wsNetwork = new BrowserWebSocketClientAdapter(
+const wsNetwork = new TestBrowserWebSocketClientAdapter(
   "wss://sync.automerge.org",
   1000
 );
@@ -20,30 +20,22 @@ const repo = new Repo({
   // Skip storage, for easier disconnection testing.
 });
 
-// // --- "Connected" checkbox for testing concurrency ---
+// --- "Connected" checkbox for testing concurrency ---
 
-// let wsAdded = false;
-// const connected = document.getElementById("connected") as HTMLInputElement;
-// connected.addEventListener("click", () => {
-//   localStorage.setItem("connected", connected.checked + "");
-//   if (connected.checked) {
-//     console.log("Connecting");
-//     if (!wsAdded) repo.networkSubsystem.addNetworkAdapter(wsNetwork);
-//     else wsNetwork.connect(wsNetwork.peerId!);
-//   } else {
-//     console.log("Disconnecting");
-//     // TODO: Does not fully disconnect us. For now, can test by
-//     // manually turning off network (Chrome only).
-//     // See https://github.com/automerge/automerge-repo/issues/324
-//     wsNetwork.disconnect();
-//   }
-// });
+const connected = document.getElementById("connected") as HTMLInputElement;
+connected.addEventListener("click", () => {
+  localStorage.setItem("connected", connected.checked + "");
+  if (connected.checked) {
+    console.log("Connecting");
+    wsNetwork.testConnected = true;
+  } else {
+    console.log("Disconnecting");
+    wsNetwork.testConnected = false;
+  }
+});
 
-// connected.checked = localStorage.getItem("connected") !== "false";
-// if (connected.checked) {
-//   repo.networkSubsystem.addNetworkAdapter(wsNetwork);
-//   wsAdded = true;
-// }
+connected.checked = localStorage.getItem("connected") !== "false";
+wsNetwork.testConnected = connected.checked;
 
 // --- Setup from template ---
 
