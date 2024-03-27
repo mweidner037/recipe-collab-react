@@ -13,3 +13,4 @@ Context:
    - https://electric-sql.com/docs/intro/offline#preserving-data-integrity : Gives an example where this is true.
    - https://electric-sql.com/blog/2022/05/03/introducing-rich-crdts#compensations : States that you "can" do this using compensations, but does not explicitly say what Electric does.
 3. Related to referential integrity: What happens if a row is updated and deleted concurrently?
+4. https://electric-sql.com/docs/usage/data-modelling/constraints : I tried this and got `error: syntax error at or near "post_id"`. I believe it should be `post_id UUID REFERENCES posts(id) ON DELETE CASCADE`, not `post_id UUID REFERENCES(posts.id) ON DELETE CASCADE` ([docs](https://www.postgresql.org/docs/current/tutorial-fk.html)).
