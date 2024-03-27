@@ -1,16 +1,18 @@
-import { CVar } from "@collabs/collabs";
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { useCollab } from "@collabs/react";
 import "./recipe_name.css";
 
 const maxNameLength = 25;
 
-export function RecipeName({ recipeName }: { recipeName: CVar<string> }) {
-  useCollab(recipeName);
-
+export function RecipeName({
+  recipeName,
+  onSet,
+}: {
+  recipeName: string;
+  onSet: (newRecipeName: string) => void;
+}) {
   const [nameEditing, setNameEditing] = useState<string | null>(null);
-  const nameValue = nameEditing ?? recipeName.value;
+  const nameValue = nameEditing ?? recipeName;
 
   return (
     <div className="recipe-name-wrapper">
@@ -28,7 +30,7 @@ export function RecipeName({ recipeName }: { recipeName: CVar<string> }) {
           let parsed = nameEditing.slice(0, maxNameLength).trim();
           if (parsed === "") parsed = "Untitled";
           // Don't perform an op for an aborted edit.
-          if (parsed !== recipeName.value) recipeName.value = parsed;
+          if (parsed !== recipeName) onSet(parsed);
           setNameEditing(null);
         }}
         onKeyDown={(e) => {
