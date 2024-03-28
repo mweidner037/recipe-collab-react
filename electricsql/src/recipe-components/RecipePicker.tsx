@@ -1,7 +1,7 @@
 import { useLiveQuery } from "electric-sql/react";
 import { genUUID } from "electric-sql/util";
 import { PositionSource } from "position-strings";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useElectric } from "../Loader";
 import { Recipes as Recipe } from "../generated/client";
@@ -12,12 +12,50 @@ import logo from "../assets/logo.svg";
 import "./RecipePicker.css";
 
 export function RecipePicker() {
+  const { db } = useElectric()!;
+
   const [pickedId, setPickedId] = useState<string>();
+
+  // If the URL hash is nonempty, try to use it as the recipe ID.
+  // We check it during the first render only.
+  const [checkedHash, setCheckedHash] = useState(document.location.hash === "");
+  useEffect(() => {
+    const hash = document.location.hash.substring(1);
+    if (hash !== "") {
+      // Check if it is a valid recipe.
+      db.recipes
+        .findUnique({ where: { id: hash } })
+        .then((recipe) => {
+          if (recipe !== null) setPickedId(recipe.id);
+          else document.location.hash = "";
+          setCheckedHash(true);
+        })
+        .catch(() => {
+          // Assume the hash is not a valid ID.
+          document.location.hash = "";
+          setCheckedHash(true);
+        });
+    }
+  }, []);
+
+  // If we're still checking the hash, don't show NotYetPicked, to prevent it
+  // from flashing briefly.
+  if (!checkedHash) {
+    return null;
+  }
 
   if (pickedId) {
     return <RecipeEditor recipeId={pickedId} />;
   } else {
-    return <NotYetPicked onPick={setPickedId} />;
+    return (
+      <NotYetPicked
+        onPick={(pickedId) => {
+          // Store pickedId in the URL hash so refreshing still shows the same recipe.
+          document.location.hash = pickedId;
+          setPickedId(pickedId);
+        }}
+      />
+    );
   }
 }
 
