@@ -1,14 +1,14 @@
 import { useLiveQuery } from "electric-sql/react";
 import { genUUID } from "electric-sql/util";
-
-import { Recipes as Recipe } from "../generated/client";
-import { useElectric } from "../Loader";
-
+import { PositionSource } from "position-strings";
 import { useState } from "react";
+
+import { useElectric } from "../Loader";
+import { Recipes as Recipe } from "../generated/client";
+import { DEFAULT_UNIT } from "../units";
 import { RecipeEditor } from "./RecipeEditor";
 
 import logo from "../assets/logo.svg";
-
 import "./RecipePicker.css";
 
 export function RecipePicker() {
@@ -35,6 +35,18 @@ function NotYetPicked({ onPick }: { onPick: (recipeId: string) => void }) {
         id,
         recipename: `Untitled ${id.slice(0, 6)}`,
         scale: 1,
+      },
+    });
+    // Add a starting ingredient.
+    await db.ingredients.create({
+      data: {
+        id: genUUID(),
+        text: "",
+        amount_unscaled: 0,
+        units: DEFAULT_UNIT,
+        // Arbitrary valid starting position.
+        position: new PositionSource({ ID: "INIT" }).createBetween(),
+        recipe_id: id,
       },
     });
   };

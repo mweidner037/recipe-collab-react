@@ -11,7 +11,7 @@ import { IngredientEditor } from "./IngredientEditor";
 
 import { genUUID } from "electric-sql/util";
 import { DEFAULT_UNIT } from "../units";
-import "./IngredientEditor.css";
+import "./IngredientsEditor.css";
 
 // Okay if this is shared globally, although in practice there is
 // just one Ingredients component.
