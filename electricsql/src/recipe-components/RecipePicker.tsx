@@ -6,6 +6,9 @@ import { useElectric } from "../Loader";
 
 import { useState } from "react";
 import { RecipeEditor } from "./RecipeEditor";
+
+import logo from "../assets/logo.svg";
+
 import "./RecipePicker.css";
 
 export function RecipePicker() {
@@ -39,17 +42,26 @@ function NotYetPicked({ onPick }: { onPick: (recipeId: string) => void }) {
   const recipes: Recipe[] = results ?? [];
 
   return (
-    <div>
-      <div className="controls">
-        <button className="button" onClick={addRecipe}>
-          Add
-        </button>
-      </div>
-      {recipes.map((recipe) => (
-        <p key={recipe.id} className="recipe" onClick={() => onPick(recipe.id)}>
-          <code>{recipe.recipename}</code>
-        </p>
-      ))}
+    <div className="Picker">
+      <header className="Picker-header">
+        <img src={logo} className="Picker-logo" alt="logo" />
+        <div>
+          <div className="controls">
+            <button className="button" onClick={addRecipe}>
+              Add
+            </button>
+          </div>
+          {recipes.map((recipe) => (
+            <p
+              key={recipe.id}
+              className="recipe"
+              onClick={() => onPick(recipe.id)}
+            >
+              <code>{recipe.recipename}</code>
+            </p>
+          ))}
+        </div>
+      </header>
     </div>
   );
 }

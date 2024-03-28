@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import { makeElectricContext } from "electric-sql/react";
 import { uniqueTabId } from "electric-sql/util";
@@ -8,13 +8,12 @@ import { ElectricDatabase, electrify } from "electric-sql/wa-sqlite";
 import { authToken } from "./auth";
 import { Electric, schema } from "./generated/client";
 
-import { RecipePicker } from "./recipe-components/RecipePicker";
-
 const { ElectricProvider, useElectric } = makeElectricContext<Electric>();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { useElectric };
 
-export const Loader = () => {
+export const Loader = ({ children }: { children: ReactNode }) => {
   const [electric, setElectric] = useState<Electric>();
 
   useEffect(() => {
@@ -52,9 +51,5 @@ export const Loader = () => {
     return null;
   }
 
-  return (
-    <ElectricProvider db={electric}>
-      <RecipePicker />
-    </ElectricProvider>
-  );
+  return <ElectricProvider db={electric}>{children}</ElectricProvider>;
 };
