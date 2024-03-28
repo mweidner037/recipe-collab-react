@@ -1,26 +1,27 @@
 import { useLiveQuery } from "electric-sql/react";
 import { useElectric } from "../Loader";
+import { IngredientsEditor } from "./IngredientsEditor";
+import { RecipeName } from "./RecipeName";
 
 import "./RecipeEditor.css";
-import { RecipeName } from "./RecipeName";
 
 export function RecipeEditor({ recipeId }: { recipeId: string }) {
   const { db } = useElectric()!;
 
-  const { results } = useLiveQuery(
+  const { results: recipe } = useLiveQuery(
     db.recipes.liveUnique({ where: { id: recipeId } })
   );
 
-  if (!results) {
+  if (!recipe) {
     return <>Loading...</>;
   }
 
   return (
     <div className="outerDiv">
       <RecipeName
-        recipeName={results.recipename}
-        onSet={(newRecipeName) => {
-          void db.recipes.update({
+        recipeName={recipe.recipename}
+        onSet={async (newRecipeName) => {
+          await db.recipes.update({
             where: { id: recipeId },
             data: { recipename: newRecipeName },
           });
@@ -29,8 +30,7 @@ export function RecipeEditor({ recipeId }: { recipeId: string }) {
       <div className="splitViewport">
         <div className="split left">
           <div className="centered">
-            TODO
-            {/* <Ingredients doc={doc} changeDoc={changeDoc} /> */}
+            <IngredientsEditor recipe={recipe} />
           </div>
         </div>
         {

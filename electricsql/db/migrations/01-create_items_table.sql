@@ -17,7 +17,7 @@ CREATE TABLE ingredients (
   -- TODO: edit-wins-over-delete semantics?
   -- Sounds like automatic, but not sure.
 
-  recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE
+  recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 ALTER TABLE ingredients ENABLE ELECTRIC;
