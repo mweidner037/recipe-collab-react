@@ -7,4 +7,4 @@ This started as a [Collabs](https://collabs.readthedocs.io/en/latest/) demo, whi
 While Collabs is specifically designed to enable that kind of nuanced behavior, you can do similar things with other collaboration frameworks if you structure your data in the right way. This repo shows how for:
 
 - [Automerge](./automerge/)
-- (More pending)
+- [ElectricSQL](./electricsql/)
