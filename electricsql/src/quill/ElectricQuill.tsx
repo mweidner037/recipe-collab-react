@@ -5,6 +5,10 @@ import { BunchMeta, Order, Position } from "list-positions";
 import { useElectric } from "../Loader";
 import { QuillWrapper, WrapperOp } from "./quill_wrapper";
 
+// TODO: Fix Quill double-toolbar in React strict mode.
+// For now we just disable strict mode.
+// See https://github.com/zenoamaro/react-quill/issues/784
+
 /**
  * The state of a long-lived "instance" of the ElectricQuill component,
  * associated to a particular Quill instance.

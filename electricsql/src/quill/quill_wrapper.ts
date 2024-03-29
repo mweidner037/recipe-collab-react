@@ -77,12 +77,13 @@ export class QuillWrapper {
           ["bold", "italic"],
           [{ header: "1" }, { header: "2" }],
           [{ list: "ordered" }, { list: "bullet" }],
+          ["link"],
         ],
         history: {
           userOnly: true,
         },
       },
-      formats: ["bold", "italic", "header", "list"],
+      formats: ["bold", "italic", "header", "list", "link"],
     });
 
     // Load initial state.
