@@ -27,3 +27,11 @@ Context:
 9. I appreciate that each mutation on https://electric-sql.com/docs/api/clients/typescript comes with an example, to show how the args are formatted.
 10. Are there any guarantees about the order that live queries resolve? For the rich-text component (`ElectricQuill.tsx`), it's important that I process bunches before processing any chars that depend on them. TODO: try depending on query order alone and report results.
 11. Is there a way to get an incremental view of a live query, showing what changed since the last result set? This would be useful for the queries in `ElectricQuill.tsx`, since I need to send just the incremental changes to the `QuillWrapper`.
+12. The Quick Start guide shows the lines
+    ```
+    ELECTRIC GRANT ALL
+    ON items
+    TO ANYONE;
+    ```
+    However, when I try these (replacing `items` with `recipes`), then `npm run db:migrate` fails wth `Error: Connection terminated unexpectedly`. (Is this because permissions are not yet implemented?)
+13. I deleted the shapes sync from the starter code, then got confused when tabs didn't sync with each other - my bad. Figured it out by noticing the `Reading from unsynced table` console log and searching for it in Discord. Reading https://electric-sql.com/docs/quickstart#sync-data should also have worked, except that I misinterpreted "Sync data into the local database" to mean "sync from the JS client into SQLite" instead of "sync from Postgres into SQLite".

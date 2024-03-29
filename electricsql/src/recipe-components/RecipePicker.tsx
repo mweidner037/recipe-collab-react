@@ -23,6 +23,8 @@ export function RecipePicker() {
     const hash = document.location.hash.substring(1);
     if (hash !== "") {
       // Check if it is a valid recipe.
+      // TODO: The recipe might be valid but not yet synced from Postgres.
+      // Should we wait until the shape sync resolves before redirecting?
       db.recipes
         .findUnique({ where: { id: hash } })
         .then((recipe) => {

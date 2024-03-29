@@ -32,6 +32,15 @@ export const Loader = ({ children }: { children: ReactNode }) => {
       const electric = await electrify(conn, schema, config);
       await electric.connect(authToken());
 
+      // Establish sync with the remote DB using shapes.
+      void electric.db.recipes.sync({
+        include: {
+          ingredients: true,
+          bunches: true,
+          char_entries: true,
+        },
+      });
+
       if (!isMounted) {
         return;
       }
