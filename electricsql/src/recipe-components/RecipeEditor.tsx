@@ -3,6 +3,7 @@ import { useElectric } from "../Loader";
 import { IngredientsEditor } from "./IngredientsEditor";
 import { RecipeName } from "./RecipeName";
 
+import { ElectricQuill } from "../quill/ElectricQuill";
 import "./RecipeEditor.css";
 
 export function RecipeEditor({ recipeId }: { recipeId: string }) {
@@ -37,8 +38,7 @@ export function RecipeEditor({ recipeId }: { recipeId: string }) {
           <div className="split right">
             <div className="instructions">
               <div className="title">Instructions</div>
-              TODO
-              {/* <AutomergeQuill docHandle={docHandle} path={["instructions"]} /> */}
+              <ElectricQuill docId={recipeId} />
             </div>
           </div>
         }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
@@ -49,6 +50,7 @@ export class QuillWrapper {
   private ourChange = false;
 
   constructor(
+    container: Element,
     /**
      * Called when the local user performs ops, which need to be synchronized
      * to other replicas.
@@ -68,8 +70,7 @@ export class QuillWrapper {
     this.richList = new RichList({ expandRules, order });
 
     // Setup Quill.
-    const editorContainer = document.getElementById("editor") as HTMLDivElement;
-    this.editor = new Quill(editorContainer, {
+    this.editor = new Quill(container, {
       theme: "snow",
       modules: {
         toolbar: [
@@ -88,75 +89,77 @@ export class QuillWrapper {
     this.load(initialState);
 
     // Sync Quill changes to our local state and to the consumer.
-    this.editor.on("text-change", (delta) => {
-      // Filter our own applyOps changes.
-      if (this.ourChange) return;
+    this.editor.on("text-change", this.textChangeHandler);
+  }
 
-      const wrapperOps: WrapperOp[] = [];
-      for (const deltaOp of getRelevantDeltaOperations(delta)) {
-        // Insertion
-        if (deltaOp.insert) {
-          if (typeof deltaOp.insert === "string") {
-            const quillAttrs = deltaOp.attributes ?? {};
-            const formattingAttrs = Object.fromEntries(
-              [...Object.entries(quillAttrs)].map(quillAttrToFormatting)
-            );
-            const [startPos, createdBunch, createdMarks] =
-              this.richList.insertWithFormat(
-                deltaOp.index,
-                formattingAttrs,
-                ...deltaOp.insert
-              );
-            if (createdBunch) {
-              // Push meta op first to avoid missing BunchMeta deps.
-              wrapperOps.push({ type: "metas", metas: [createdBunch] });
-            }
-            wrapperOps.push({ type: "set", startPos, chars: deltaOp.insert });
-            wrapperOps.push({ type: "marks", marks: createdMarks });
-          } else {
-            // Embed of object
-            throw new Error("Embeds not supported");
-          }
-        }
-        // Deletion
-        else if (deltaOp.delete) {
-          const toDelete = [
-            ...this.richList.list.positions(
+  private textChangeHandler = (delta: DeltaStatic) => {
+    // Filter our own applyOps changes.
+    if (this.ourChange) return;
+
+    const wrapperOps: WrapperOp[] = [];
+    for (const deltaOp of getRelevantDeltaOperations(delta)) {
+      // Insertion
+      if (deltaOp.insert) {
+        if (typeof deltaOp.insert === "string") {
+          const quillAttrs = deltaOp.attributes ?? {};
+          const formattingAttrs = Object.fromEntries(
+            [...Object.entries(quillAttrs)].map(quillAttrToFormatting)
+          );
+          const [startPos, createdBunch, createdMarks] =
+            this.richList.insertWithFormat(
               deltaOp.index,
-              deltaOp.index + deltaOp.delete
-            ),
-          ];
-          for (const pos of toDelete) {
-            this.richList.list.delete(pos);
-            wrapperOps.push({
-              type: "delete",
-              startPos: pos,
-            });
-          }
-        }
-        // Formatting
-        else if (deltaOp.attributes && deltaOp.retain) {
-          for (const [quillKey, quillValue] of Object.entries(
-            deltaOp.attributes
-          )) {
-            const [key, value] = quillAttrToFormatting([quillKey, quillValue]);
-            const [mark] = this.richList.format(
-              deltaOp.index,
-              deltaOp.index + deltaOp.retain,
-              key,
-              value
+              formattingAttrs,
+              ...deltaOp.insert
             );
-            wrapperOps.push({
-              type: "marks",
-              marks: [mark],
-            });
+          if (createdBunch) {
+            // Push meta op first to avoid missing BunchMeta deps.
+            wrapperOps.push({ type: "metas", metas: [createdBunch] });
           }
+          wrapperOps.push({ type: "set", startPos, chars: deltaOp.insert });
+          wrapperOps.push({ type: "marks", marks: createdMarks });
+        } else {
+          // Embed of object
+          throw new Error("Embeds not supported");
         }
       }
+      // Deletion
+      else if (deltaOp.delete) {
+        const toDelete = [
+          ...this.richList.list.positions(
+            deltaOp.index,
+            deltaOp.index + deltaOp.delete
+          ),
+        ];
+        for (const pos of toDelete) {
+          this.richList.list.delete(pos);
+          wrapperOps.push({
+            type: "delete",
+            startPos: pos,
+          });
+        }
+      }
+      // Formatting
+      else if (deltaOp.attributes && deltaOp.retain) {
+        for (const [quillKey, quillValue] of Object.entries(
+          deltaOp.attributes
+        )) {
+          const [key, value] = quillAttrToFormatting([quillKey, quillValue]);
+          const [mark] = this.richList.format(
+            deltaOp.index,
+            deltaOp.index + deltaOp.retain,
+            key,
+            value
+          );
+          wrapperOps.push({
+            type: "marks",
+            marks: [mark],
+          });
+        }
+      }
+    }
 
-      if (wrapperOps.length !== 0) this.onLocalOps(wrapperOps);
-    });
-  }
+    if (wrapperOps.length !== 0) this.onLocalOps(wrapperOps);
+  };
 
   /**
    * Applies the given ops to the Quill state.
@@ -317,6 +320,10 @@ export class QuillWrapper {
         length: endIndex - startIndex,
       });
     }
+  }
+
+  destroy(): void {
+    this.editor.off("text-change", this.textChangeHandler);
   }
 
   /**

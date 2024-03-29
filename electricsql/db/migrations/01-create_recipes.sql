@@ -28,7 +28,8 @@ CREATE TABLE bunches (
   -- Another bunchId or "ROOT".
   parent_id TEXT NOT NULL,
   theOffset INTEGER NOT NULL,
-  recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
+  -- To use in another app, replace recipes(id) with your doc IDs.
+  doc_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 ALTER TABLE bunches ENABLE ELECTRIC;
@@ -42,8 +43,9 @@ CREATE TABLE char_entries (
   pos TEXT PRIMARY KEY,
   -- Electric does not support CHAR(1), so use TEXT instead.
   char TEXT NOT NULL,
-  -- Store the recipe ID so we can delete-cascade.
-  recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
+  -- Store doc IDs so we can delete cascade.
+  -- To use in another app, replace recipes(id) with your doc IDs.
+  doc_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 ALTER TABLE char_entries ENABLE ELECTRIC;
