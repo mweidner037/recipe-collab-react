@@ -1,8 +1,19 @@
 import { useEffect, useRef } from "react";
 
-import { Order, Position } from "list-positions";
+import { useLiveQuery } from "electric-sql/react";
+import { BunchMeta, Order, Position } from "list-positions";
 import { useElectric } from "../Loader";
 import { QuillWrapper, WrapperOp } from "./quill_wrapper";
+
+/**
+ * The state of a long-lived "instance" of the ElectricQuill component,
+ * associated to a particular Quill instance.
+ */
+type InstanceState = {
+  wrapper: QuillWrapper;
+  curBunchIDs: Set<string>;
+  curCharIDs: Set<string>;
+};
 
 export function ElectricQuill({
   docId,
@@ -13,17 +24,21 @@ export function ElectricQuill({
 }) {
   const { db } = useElectric()!;
 
+  const instanceStateRef = useRef<InstanceState | null>(null);
   const quillRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (quillRef.current === null) return;
-
     const wrapper = new QuillWrapper(
-      quillRef.current,
+      quillRef.current!,
       onLocalOps,
       // Start with minimal initial state; existing db state loaded
       // in by queries below, analogous to new edits.
       QuillWrapper.makeInitialState()
     );
+    instanceStateRef.current = {
+      wrapper,
+      curBunchIDs: new Set(),
+      curCharIDs: new Set(),
+    };
 
     /**
      * Note: I use a strategy that describes the Quill state "transparently"
@@ -80,15 +95,78 @@ export function ElectricQuill({
       }
     }
 
-    // Reflect DB ops in Quill.
-    // TODO: need to do manual diff like in Triplit? Add dev note asking about alternatives.
-
     return () => wrapper.destroy();
   }, [docId]);
+
+  // Reflect DB ops in Quill.
+  // Since queries are not incremental, we diff against the previous state
+  // and process changed (inserted/deleted) ids.
+  // Note that this will also capture local changes; QuillWrapper will ignore
+  // those as redundant.
+  const { results: bunches } = useLiveQuery(
+    db.bunches.liveMany({ where: { doc_id: docId } })
+  );
+  const { results: charEntries } = useLiveQuery(
+    db.char_entries.liveMany({ where: { doc_id: docId } })
+  );
+
+  if (instanceStateRef.current !== null) {
+    const { wrapper, curBunchIDs, curCharIDs } = instanceStateRef.current;
+    const newOps: WrapperOp[] = [];
+
+    if (bunches) {
+      const newBunchMetas: BunchMeta[] = [];
+      for (const bunch of bunches) {
+        if (!curBunchIDs.has(bunch.id)) {
+          curBunchIDs.add(bunch.id);
+          newBunchMetas.push({
+            bunchID: bunch.id,
+            parentID: bunch.parent_id,
+            offset: bunch.theoffset,
+          });
+        }
+      }
+      if (newBunchMetas.length !== 0) {
+        newOps.push({ type: "metas", metas: newBunchMetas });
+      }
+    }
+
+    if (charEntries) {
+      const unseenCharIDs = new Set(curCharIDs);
+      for (const charEntry of charEntries) {
+        if (!curCharIDs.has(charEntry.pos)) {
+          curCharIDs.add(charEntry.pos);
+          newOps.push({
+            type: "set",
+            startPos: decodePos(charEntry.pos),
+            chars: charEntry.char,
+          });
+        }
+        unseenCharIDs.delete(charEntry.pos);
+      }
+      // unseenCharIDs is the diff in the other direction, used to find deleted rows.
+      for (const unseenCharID of unseenCharIDs) {
+        newOps.push({
+          type: "delete",
+          startPos: decodePos(unseenCharID),
+        });
+        curCharIDs.delete(unseenCharID);
+      }
+    }
+
+    if (newOps.length !== 0) wrapper.applyOps(newOps);
+  }
 
   return <div ref={quillRef} style={style} />;
 }
 
 function encodePos(pos: Position): string {
   return `${pos.bunchID}_${pos.innerIndex.toString(36)}`;
+}
+
+function decodePos(encoded: string): Position {
+  const sep = encoded.lastIndexOf("_");
+  const bunchID = encoded.slice(0, sep);
+  const innerIndex = Number.parseInt(encoded.slice(sep + 1), 36);
+  return { bunchID, innerIndex };
 }
