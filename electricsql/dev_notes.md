@@ -12,7 +12,7 @@ Context:
 2. Referential integrity: My understanding is that updates to a row with a foreign key constraint will override deleting the referenced row; however, this is not quite stated explicitly. https://electric-sql.com/docs/usage/data-modelling/constraints#referential-integrity links to two pages:
    - https://electric-sql.com/docs/intro/offline#preserving-data-integrity : Gives an example where this is true.
    - https://electric-sql.com/blog/2022/05/03/introducing-rich-crdts#compensations : States that you "can" do this using compensations, but does not explicitly say what Electric does.
-3. Related to referential integrity: What happens if a row is updated and deleted concurrently?
+3. Related to referential integrity: What happens if a row is updated and deleted concurrently? (Empirically: edit wins over delete, like I wanted - nice.)
 4. https://electric-sql.com/docs/usage/data-modelling/constraints : I tried this and got `error: syntax error at or near "post_id"`. I believe it should be `post_id UUID REFERENCES posts(id) ON DELETE CASCADE`, not `post_id UUID REFERENCES(posts.id) ON DELETE CASCADE` ([docs](https://www.postgresql.org/docs/current/tutorial-fk.html)).
    - I know these syntax errors are probably coming from an external tool, but they are rather unhelpful (they tell you the line with the error but no info about what the error is). E.g., I tried to name a column "offset", not knowing that it was a keyword, and the tool gave no hint of what was wrong.
 5. It took me some tries to access `useElectric` from an interior component:
@@ -48,3 +48,7 @@ Context:
     2493 interface RecipesGetPayload extends HKT {
                    ~~~~~~~~~~~~~~~~~
     ```
+
+15. Calling `createMany({data: []})` appeared to cause an error ("missing data"). I had passed `[]` by accident (bug in my Quill wrapper), but in general, it seems like `data: []` should do nothing instead of erroring.
+16. If I paste a bunch of text and then disconnect the checkbox (which calls `electric.disconnect()`) before it finishes syncing the new text, I see `Uncaught Error: sending a transaction while outbound replication has not started` in the console. Though I have not noticed any ill effects yet.
+    - Otherwise, connect and disconnect "just worked" in the way I expected. I appreciate that there is any easy way to test offline behavior like this.

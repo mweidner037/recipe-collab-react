@@ -56,10 +56,31 @@ export const Loader = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  console.log(electric);
+  const [connected, setConnected] = useState(true);
+
   if (electric === undefined) {
     return null;
   }
 
-  return <ElectricProvider db={electric}>{children}</ElectricProvider>;
+  return (
+    <>
+      <div>
+        {/* Connected checkbox, for testing concurrency. */}
+        <input
+          type="checkbox"
+          id="connected"
+          checked={connected}
+          onChange={(e) => {
+            if (e.currentTarget.checked) {
+              electric.connect(authToken());
+            } else electric.disconnect();
+            setConnected(e.currentTarget.checked);
+          }}
+        />
+        <label htmlFor="connected">Connected</label>
+        <hr />
+      </div>
+      <ElectricProvider db={electric}>{children}</ElectricProvider>
+    </>
+  );
 };
