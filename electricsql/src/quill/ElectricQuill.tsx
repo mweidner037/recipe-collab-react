@@ -75,7 +75,11 @@ export function ElectricQuill({
             break;
           }
           case "delete":
-            // TODO: deleteMany instead?
+            // TODO: bulk deletes lead to many individual queries, which show up
+            // slowly for other collaborators.
+            // We should instead group all deletes (across all ops) into a single
+            // deleteMany call. (I suppose we could do likewise for the other op types:
+            // aggregate into one DB query per type within each onLocalOps call.)
             for (const pos of Order.startPosToArray(
               op.startPos,
               op.count ?? 1

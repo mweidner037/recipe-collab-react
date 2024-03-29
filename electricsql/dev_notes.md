@@ -25,7 +25,7 @@ Context:
 7. The starter's list of items uses the index in the `items` array as a React key. It seems like it would be a better practice to use DB primary keys as React keys in general (which is what I've done).
 8. Being able to ORDER BY in queries is nice (e.g., order by positions in `IngredientsEditor.tsx`). Likewise the fact that I get an ID on each result object that I can reference in mutations and React keys - this is something that CRDT libraries often hide internally.
 9. I appreciate that each mutation on https://electric-sql.com/docs/api/clients/typescript comes with an example, to show how the args are formatted.
-10. Are there any guarantees about the order that live queries resolve? For the rich-text component (`ElectricQuill.tsx`), it's important that I process bunches before processing any chars that depend on them. TODO: try depending on query order alone and report results.
+10. Are there any guarantees about the order that live queries start returning data? For the rich-text component (`ElectricQuill.tsx`), it's important that I process bunches before processing any chars that depend on them. (So far: I do the naive thing and haven't seen any issues.)
 11. Is there a way to get an incremental view of a live query, showing what changed since the last result set? This would be useful for the queries in `ElectricQuill.tsx`, since I need to send just the incremental changes to the `QuillWrapper`.
 12. The Quick Start guide shows the lines
     ```

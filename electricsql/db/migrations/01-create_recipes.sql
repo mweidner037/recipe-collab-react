@@ -13,8 +13,7 @@ CREATE TABLE ingredients (
   amount_unscaled REAL NOT NULL,
   units TEXT NOT NULL,
   position TEXT NOT NULL,
-  -- TODO: edit-wins-over-delete semantics?
-  -- Sounds like automatic, but not sure.
+  -- Edit wins over delete semantics: Appears to happen automatically.
 
   recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE
 );
