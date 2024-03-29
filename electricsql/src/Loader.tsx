@@ -38,6 +38,7 @@ export const Loader = ({ children }: { children: ReactNode }) => {
           ingredients: true,
           bunches: true,
           char_entries: true,
+          formatting_marks: true,
         },
       });
 

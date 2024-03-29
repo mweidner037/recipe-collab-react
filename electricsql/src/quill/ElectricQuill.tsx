@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { useLiveQuery } from "electric-sql/react";
+import { TimestampMark } from "list-formatting";
 import { BunchMeta, Order, Position } from "list-positions";
 import { useElectric } from "../Loader";
 import { QuillWrapper, WrapperOp } from "./quill_wrapper";
@@ -17,6 +18,7 @@ type InstanceState = {
   wrapper: QuillWrapper;
   curBunchIDs: Set<string>;
   curCharIDs: Set<string>;
+  curMarkIDs: Set<string>;
 };
 
 export function ElectricQuill({
@@ -42,6 +44,7 @@ export function ElectricQuill({
       wrapper,
       curBunchIDs: new Set(),
       curCharIDs: new Set(),
+      curMarkIDs: new Set(),
     };
 
     /**
@@ -87,13 +90,25 @@ export function ElectricQuill({
               data: op.metas.map((meta) => ({
                 id: meta.bunchID,
                 parent_id: meta.parentID,
-                theoffset: meta.offset,
+                the_offset: meta.offset,
                 doc_id: docId,
               })),
             });
             break;
           case "marks":
-            // TODO
+            console.log(op.marks);
+            await db.formatting_marks.createMany({
+              data: op.marks.map((mark) => ({
+                id: encodeMarkID(mark),
+                start_pos: encodePos(mark.start.pos),
+                start_before: mark.start.before,
+                end_pos: encodePos(mark.end.pos),
+                end_before: mark.end.before,
+                the_key: mark.key,
+                the_value: JSON.stringify(mark.value),
+                doc_id: docId,
+              })),
+            });
             break;
         }
       }
@@ -113,9 +128,13 @@ export function ElectricQuill({
   const { results: charEntries } = useLiveQuery(
     db.char_entries.liveMany({ where: { doc_id: docId } })
   );
+  const { results: marks } = useLiveQuery(
+    db.formatting_marks.liveMany({ where: { doc_id: docId } })
+  );
 
   if (instanceStateRef.current !== null) {
-    const { wrapper, curBunchIDs, curCharIDs } = instanceStateRef.current;
+    const { wrapper, curBunchIDs, curCharIDs, curMarkIDs } =
+      instanceStateRef.current;
     const newOps: WrapperOp[] = [];
 
     if (bunches) {
@@ -126,7 +145,7 @@ export function ElectricQuill({
           newBunchMetas.push({
             bunchID: bunch.id,
             parentID: bunch.parent_id,
-            offset: bunch.theoffset,
+            offset: bunch.the_offset,
           });
         }
       }
@@ -158,6 +177,32 @@ export function ElectricQuill({
       }
     }
 
+    if (marks) {
+      for (const mark of marks) {
+        if (!curMarkIDs.has(mark.id)) {
+          curMarkIDs.add(mark.id);
+          newOps.push({
+            type: "marks",
+            marks: [
+              {
+                ...decodeMarkID(mark.id),
+                start: {
+                  pos: decodePos(mark.start_pos),
+                  before: mark.start_before,
+                },
+                end: {
+                  pos: decodePos(mark.end_pos),
+                  before: mark.end_before,
+                },
+                key: mark.the_key,
+                value: JSON.parse(mark.the_value),
+              },
+            ],
+          });
+        }
+      }
+    }
+
     if (newOps.length !== 0) wrapper.applyOps(newOps);
   }
 
@@ -173,4 +218,18 @@ function decodePos(encoded: string): Position {
   const bunchID = encoded.slice(0, sep);
   const innerIndex = Number.parseInt(encoded.slice(sep + 1), 36);
   return { bunchID, innerIndex };
+}
+
+function encodeMarkID(mark: TimestampMark): string {
+  return `${mark.creatorID}_${mark.timestamp.toString(36)}`;
+}
+
+function decodeMarkID(encoded: string): {
+  creatorID: string;
+  timestamp: number;
+} {
+  const sep = encoded.lastIndexOf("_");
+  const creatorID = encoded.slice(0, sep);
+  const timestamp = Number.parseInt(encoded.slice(sep + 1), 36);
+  return { creatorID, timestamp };
 }

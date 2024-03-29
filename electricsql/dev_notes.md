@@ -34,4 +34,17 @@ Context:
     TO ANYONE;
     ```
     However, when I try these (replacing `items` with `recipes`), then `npm run db:migrate` fails wth `Error: Connection terminated unexpectedly`. (Is this because permissions are not yet implemented?)
-13. I deleted the shapes sync from the starter code, then got confused when tabs didn't sync with each other - my bad. Figured it out by noticing the `Reading from unsynced table` console log and searching for it in Discord. Reading https://electric-sql.com/docs/quickstart#sync-data should also have worked, except that I misinterpreted "Sync data into the local database" to mean "sync from the JS client into SQLite" instead of "sync from Postgres into SQLite".
+13. I deleted the shapes sync from the starter code, then got confused when tabs didn't sync with each other - my fault. The `Reading from unsynced table` console log (+ Discord search) was helpful in figuring out how to fix it.
+    - Reading https://electric-sql.com/docs/quickstart#sync-data should also have worked, although at first I misinterpreted "Sync data into the local database" to mean "sync from the JS client into SQLite" instead of "sync from Postgres into SQLite".
+14. When I run `tsc` (e.g. `npm run build`), I get errors in the generated code, all of the following form:
+
+    ```
+    src/generated/client/index.ts:2493:11 - error TS2430: Interface 'RecipesGetPayload' incorrectly extends interface 'HKT'.
+    Types of property 'type' are incompatible.
+       Type 'RecipesGetPayload<this["_A"]>' is not assignable to type 'Record<string, any> | undefined'.
+          Type '"Please either choose `select` or `include`" | Recipes | (Recipes & { [x: string]: never; [x: number]: never; }) | { [x: string]: never; [x: number]: never; }' is not assignable to type 'Record<string, any> | undefined'.
+          Type 'string' is not assignable to type 'Record<string, any>'.
+
+    2493 interface RecipesGetPayload extends HKT {
+                   ~~~~~~~~~~~~~~~~~
+    ```

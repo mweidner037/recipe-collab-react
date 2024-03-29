@@ -117,7 +117,9 @@ export class QuillWrapper {
             wrapperOps.push({ type: "metas", metas: [createdBunch] });
           }
           wrapperOps.push({ type: "set", startPos, chars: deltaOp.insert });
-          wrapperOps.push({ type: "marks", marks: createdMarks });
+          if (createdMarks.length !== 0) {
+            wrapperOps.push({ type: "marks", marks: createdMarks });
+          }
         } else {
           // Embed of object
           throw new Error("Embeds not supported");
