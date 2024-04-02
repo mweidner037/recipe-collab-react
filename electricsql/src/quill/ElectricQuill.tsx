@@ -61,6 +61,11 @@ export function ElectricQuill({
 
     // Send local ops to the DB.
     async function onLocalOps(ops: WrapperOp[]) {
+      // Encoded Positions to delete.
+      // We batch these into a single DB op at the end, to prevent
+      // gradual backspacing when a collaborator deletes a large selection.
+      const toDelete: string[] = [];
+
       for (const op of ops) {
         switch (op.type) {
           case "set": {
@@ -75,16 +80,11 @@ export function ElectricQuill({
             break;
           }
           case "delete":
-            // TODO: bulk deletes lead to many individual queries, which show up
-            // slowly for other collaborators.
-            // We should instead group all deletes (across all ops) into a single
-            // deleteMany call. (I suppose we could do likewise for the other op types:
-            // aggregate into one DB query per type within each onLocalOps call.)
             for (const pos of Order.startPosToArray(
               op.startPos,
               op.count ?? 1
             )) {
-              await db.char_entries.delete({ where: { pos: encodePos(pos) } });
+              toDelete.push(encodePos(pos));
             }
             break;
           case "metas":
@@ -115,6 +115,13 @@ export function ElectricQuill({
             });
             break;
         }
+      }
+
+      // Batched delete.
+      if (toDelete.length !== 0) {
+        await db.char_entries.deleteMany({
+          where: { OR: toDelete.map((pos) => ({ pos })) },
+        });
       }
     }
 

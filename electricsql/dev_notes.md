@@ -50,5 +50,6 @@ Context:
     ```
 
 15. Calling `createMany({data: []})` appeared to cause an error ("missing data"). I had passed `[]` by accident (bug in my Quill wrapper), but in general, it seems like `data: []` should do nothing instead of erroring.
+   - Likewise for `deleteMany({ where: { OR: [] }})`: I get `TypeError: reduce of empty array with no initial value`.
 16. If I paste a bunch of text and then disconnect the checkbox (which calls `electric.disconnect()`) before it finishes syncing the new text, I see `Uncaught Error: sending a transaction while outbound replication has not started` in the console. Though I have not noticed any ill effects yet.
     - Otherwise, connect and disconnect "just worked" in the way I expected. I appreciate that there is any easy way to test offline behavior like this.
