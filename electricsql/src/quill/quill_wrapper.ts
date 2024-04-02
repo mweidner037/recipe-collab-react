@@ -11,10 +11,6 @@ import {
 import { BunchMeta, Order, Position } from "list-positions";
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 
-// TODO: h1/h2 format wrong. CSS conflict?
-// TODO: pasting a line (with trailing newline) sometimes pastes an extra newline
-// as well.
-
 import "quill/dist/quill.snow.css";
 
 const Delta: typeof DeltaType = Quill.import("delta");
