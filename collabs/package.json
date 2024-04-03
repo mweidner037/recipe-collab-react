@@ -1,5 +1,4 @@
 {
-  "license": "Apache-2.0",
   "dependencies": {
     "@collabs/collabs": "0.13.4",
     "@collabs/react": "0.13.4",
