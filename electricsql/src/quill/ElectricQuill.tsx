@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { useLiveQuery } from "electric-sql/react";
 import { TimestampMark } from "list-formatting";
-import { BunchMeta, Order, Position } from "list-positions";
+import { BunchMeta, Position, expandPositions } from "list-positions";
 import { useElectric } from "../Loader";
 import { QuillWrapper, WrapperOp } from "./quill_wrapper";
 
@@ -69,7 +69,7 @@ export function ElectricQuill({
       for (const op of ops) {
         switch (op.type) {
           case "set": {
-            const poss = Order.startPosToArray(op.startPos, op.chars.length);
+            const poss = expandPositions(op.startPos, op.chars.length);
             await db.char_entries.createMany({
               data: poss.map((pos, i) => ({
                 pos: encodePos(pos),
@@ -80,10 +80,7 @@ export function ElectricQuill({
             break;
           }
           case "delete":
-            for (const pos of Order.startPosToArray(
-              op.startPos,
-              op.count ?? 1
-            )) {
+            for (const pos of expandPositions(op.startPos, op.count ?? 1)) {
               toDelete.push(encodePos(pos));
             }
             break;

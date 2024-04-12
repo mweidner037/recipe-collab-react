@@ -8,7 +8,7 @@ import {
   TimestampMark,
   sliceFromSpan,
 } from "list-formatting";
-import { BunchMeta, Order, Position } from "list-positions";
+import { BunchMeta, Order, Position, expandPositions } from "list-positions";
 import Quill, { DeltaStatic, Delta as DeltaType } from "quill";
 
 import "quill/dist/quill.snow.css";
@@ -181,7 +181,7 @@ export class QuillWrapper {
           allMetas.push(...op.metas);
         }
       }
-      this.richList.order.receive(allMetas);
+      this.richList.order.addMetas(allMetas);
 
       // Process the non-"metas" ops.
       let pendingDelta: DeltaStatic = new Delta();
@@ -191,7 +191,7 @@ export class QuillWrapper {
             break;
           case "set": {
             // OPT: Apply these in bulk if possible (common case of causally ordered ops).
-            const poss = Order.startPosToArray(op.startPos, op.chars.length);
+            const poss = expandPositions(op.startPos, op.chars.length);
             for (let i = 0; i < poss.length; i++) {
               const pos = poss[i];
               const char = op.chars[i];
@@ -210,10 +210,7 @@ export class QuillWrapper {
           }
           case "delete":
             // OPT: Apply these in bulk if possible (common case of causally ordered ops).
-            for (const pos of Order.startPosToArray(
-              op.startPos,
-              op.count ?? 1
-            )) {
+            for (const pos of expandPositions(op.startPos, op.count ?? 1)) {
               if (this.richList.list.has(pos)) {
                 const index = this.richList.list.indexOfPosition(pos);
                 this.richList.list.delete(pos);
